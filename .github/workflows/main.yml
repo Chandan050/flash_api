@@ -60,5 +60,11 @@ jobs:
               run:
                 docker build . -t   chandan/demo-app:${{env.VERSION}}
 
+            # push to docker hub
+            - name: Push Docker Image
+              run:
+                docker push chandan/demo-app:${{env.VERSION}}
+
+
             
         
