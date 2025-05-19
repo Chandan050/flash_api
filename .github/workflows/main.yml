@@ -29,7 +29,7 @@ jobs:
           python-version: '3.9'
             
       - name: Docker setup
-        uses: docker/setup-build-actions@v2
+        uses: docker/setup-buildx-action@v2
 
       - name:  Install dependencies
         run: |
@@ -40,9 +40,9 @@ jobs:
     #   Testing my code
       - name: Run Linting Tests
         run: |
-          flake8 --ignore=E501, E401 .
+          flake8 --ignore=E501, F401 .
             
-      - name: docker credentials
+      - name: Docker credentials
         uses: docker/login-action@v2  
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -51,22 +51,22 @@ jobs:
       - name: Docker tag
         id: version
         run: |
-          VERSION=v&{date +"%y%m%d%H%M%s"}
+          VERSION=v${date +"%Y%m%d%H%M%s"}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     # Build docker image
       - name: Build Docker Image
-        run:
+        run: |
           docker build . -t   chandan/demo-app:${{env.VERSION}}
 
     # push to docker hub
       - name: Push Docker Image
-        run:
+        run: |
           docker push chandan/demo-app:${{env.VERSION}}
 
       - name: update the k8s Manifests
         run: |
-          sed -i 's/image: 1nfosecsingh/demo-app:*/image: 1nfosecsingh/demo-app:${{env.VERSION}}/' k8s/deployment.yaml
+          sed -i 's|image: chandan/demo-app:*/image: chandan/demo-app:${{env.VERSION}}/' k8s/deployment.yaml
             
      # update the changes 
       - name: Update the changes
