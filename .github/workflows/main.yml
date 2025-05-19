@@ -57,16 +57,16 @@ jobs:
     # Build docker image
       - name: Build Docker Image
         run: |
-          docker build . -t   chandan/demo-app:${{env.VERSION}}
+          docker build . -t   chandan050/demo-app:${{env.VERSION}}
 
     # push to docker hub
       - name: Push Docker Image
         run: |
-          docker push chandan/demo-app:${{env.VERSION}}
+          docker push chandan050/demo-app:${{env.VERSION}}
 
       - name: update the k8s Manifests
         run: |
-          sed -i 's|image: chandan/demo-app:*/image: chandan/demo-app:${{env.VERSION}}/' k8s/deployment.yaml
+          sed -i 's|image: chandan050/demo-app:*/image: chandan050/demo-app:${{env.VERSION}}/' k8s/deployment.yaml
             
      # update the changes 
       - name: Update the changes
