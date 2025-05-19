@@ -3,67 +3,80 @@ name: Test and Buid
 
 
 on:
-    push:
-        branches:
-            - main
-            - chandan
-        paths:
-            - '**/*'
+  push:
+    branches:
+      - main
+      - chandan
+    paths:
+      - '**/*'
     # pull_requests:
     #     branches:
     #         - main
     #         - chandan
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
     
-        steps:
+    steps:
             # setting up the env
-            - name: Checkout code
-              uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-            - name: Setup python
-              uses: actions/setup-python@v2
-              with:
-                python-version: '3.9'
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
             
-            - name: Docker setup
-              uses: docker/setup-build-actions@v2
+      - name: Docker setup
+        uses: docker/setup-build-actions@v2
 
+      - name:  Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
             
-            - name:  Install dependencies
-              run: |
-                python -m pip install --upgrade pip
-                pip install -r requirements.txt
-                pip install flake8
+    #   Testing my code
+      - name: Run Linting Tests
+        run: |
+          flake8 --ignore=E501, E401 .
             
-            #   Testing my code
-            - name: Run Linting Tests
-              run: |
-                flake8 --ignore=E501, E401 .
+      - name: docker credentials
+        uses: docker/login-action@v2  
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_USERNAME_PASSWORD }}
             
-            - name: docker credentials
-              uses: docker/login-action@v2  
-              with:
-                username: ${{ secrets.DOCKER_USERNAME }}
-                password: ${{ secrets.DOCKER_USERNAME_PASSWORD }}
-            
-            - name: Docker tag
-              id: version
-              run: |
-                VERSION=v&{date +"%y%m%d%H%M%s"}
-                echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Docker tag
+        id: version
+        run: |
+          VERSION=v&{date +"%y%m%d%H%M%s"}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-            # Build docker image
-            - name: Build Docker Image
-              run:
-                docker build . -t   chandan/demo-app:${{env.VERSION}}
+    # Build docker image
+      - name: Build Docker Image
+        run:
+          docker build . -t   chandan/demo-app:${{env.VERSION}}
 
-            # push to docker hub
-            - name: Push Docker Image
-              run:
-                docker push chandan/demo-app:${{env.VERSION}}
+    # push to docker hub
+      - name: Push Docker Image
+        run:
+          docker push chandan/demo-app:${{env.VERSION}}
+
+      - name: update the k8s Manifests
+        run: |
+          sed -i 's/image: 1nfosecsingh/demo-app:*/image: 1nfosecsingh/demo-app:${{env.VERSION}}/' k8s/deployment.yaml
+            
+     # update the changes 
+      - name: Update the changes
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "<>"
+          git add deploy/deploy.yaml
+          git commit -m "update the version for deploy.yaml file ${{env.VERSION}}"
+          git push origin main
+
 
 
             
