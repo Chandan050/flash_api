@@ -1,1 +1,24 @@
+name: Test and Buid
+# des: Test and build a new project
 
+
+on:
+    push:
+        branches:
+            - main
+            - chandan
+        paths:
+            - '**/*'
+    # pull_requests:
+    #     branches:
+    #         - main
+    #         - chandan
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+    
+        steps:
+            - name: Checkout code
+            uses: actions/checkout@v2
+        
